@@ -8,11 +8,11 @@ import (
 // Service provides high-level user management operations on a LocalStorage backend.
 type Service struct {
 	// storage is the underlying persistence for User entities.
-	storage *LocalStorage
+	storage Storage
 }
 
 // NewService creates a new Service.
-func NewService(storage *LocalStorage) *Service {
+func NewService(storage Storage) *Service {
 	return &Service{
 		storage: storage,
 	}
