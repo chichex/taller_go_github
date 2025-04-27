@@ -7,7 +7,7 @@ import (
 )
 
 func TestService_Create_Simple(t *testing.T) {
-	s := NewService(NewLocalStorage())
+	s := NewService(NewLocalStorage(), nil)
 
 	input := &User{
 		Name:     "Ayrton",
@@ -27,7 +27,7 @@ func TestService_Create_Simple(t *testing.T) {
 		mockSet: func(user *User) error {
 			return errors.New("fake error trying to set user")
 		},
-	})
+	}, nil)
 
 	err = s.Create(input)
 	require.NotNil(t, err)

@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"go.uber.org/zap"
 	"net/http"
 	"parte3/internal/user"
 
@@ -11,6 +12,7 @@ import (
 // handler holds the user service and implements HTTP handlers for user CRUD.
 type handler struct {
 	userService *user.Service
+	logger      *zap.Logger
 }
 
 // handleCreate handles POST /users
@@ -36,6 +38,7 @@ func (h *handler) handleCreate(ctx *gin.Context) {
 		return
 	}
 
+	h.logger.Info("user created", zap.Any("user", u))
 	ctx.JSON(http.StatusCreated, u)
 }
 
@@ -46,14 +49,17 @@ func (h *handler) handleRead(ctx *gin.Context) {
 	u, err := h.userService.Get(id)
 	if err != nil {
 		if errors.Is(err, user.ErrNotFound) {
+			h.logger.Warn("user not found", zap.String("id", id))
 			ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
 
+		h.logger.Error("error trying to get user", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
+	h.logger.Info("get user succeed", zap.Any("user", u))
 	ctx.JSON(http.StatusOK, u)
 }
 

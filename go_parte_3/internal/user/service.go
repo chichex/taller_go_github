@@ -2,6 +2,7 @@ package user
 
 import (
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"time"
 )
 
@@ -9,12 +10,21 @@ import (
 type Service struct {
 	// storage is the underlying persistence for User entities.
 	storage Storage
+
+	// logger is our observability component to log.
+	logger *zap.Logger
 }
 
 // NewService creates a new Service.
-func NewService(storage Storage) *Service {
+func NewService(storage Storage, logger *zap.Logger) *Service {
+	if logger == nil {
+		logger, _ = zap.NewProduction()
+		defer logger.Sync() // flushes buffer, if any
+	}
+	
 	return &Service{
 		storage: storage,
+		logger:  logger,
 	}
 }
 
@@ -28,7 +38,12 @@ func (s *Service) Create(user *User) error {
 	user.UpdatedAt = now
 	user.Version = 1
 
-	return s.storage.Set(user)
+	if err := s.storage.Set(user); err != nil {
+		s.logger.Error("failed to set user", zap.Error(err), zap.Any("user", user))
+		return err
+	}
+
+	return nil
 }
 
 // Get retrieves a user by its ID.
